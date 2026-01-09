@@ -1,0 +1,151 @@
+version: '3.8'
+
+# ============================================================================
+# Docker Compose Configuration for Advanced RAG API
+# ============================================================================
+# Complete local development and production setup with:
+# - FastAPI application
+# - PostgreSQL database (optional)
+# - Redis cache (optional)
+# - Nginx reverse proxy
+#
+# Usage:
+#   Development:  docker-compose up
+#   Production:   docker-compose -f docker-compose.yml up -d
+#   Stop:         docker-compose down
+#   View logs:    docker-compose logs -f api
+# ============================================================================
+
+services:
+  # ========================================================================
+  # FastAPI Application
+  # ========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-test-key-123}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_ENV=${PINECONE_ENV}
+      - PINECONE_INDEX=${PINECONE_INDEX}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/rag.db}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_DIR=/app/logs
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - cache
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ========================================================================
+  # PostgreSQL Database (Optional)
+  # ========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: rag-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rag_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rag_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rag-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========================================================================
+  # Redis Cache (Optional)
+  # ========================================================================
+  cache:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========================================================================
+  # Nginx Reverse Proxy (Optional, for production)
+  # ========================================================================
+  # Uncomment to enable nginx proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: rag-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+  #     - ./certs:/etc/nginx/certs:ro
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - rag-network
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
+
+# ============================================================================
+# Environment Variables Template
+# ============================================================================
+# Create a .env file with these variables:
+# API_KEY=your-secure-api-key
+# OPENAI_API_KEY=sk-...
+# PINECONE_API_KEY=...
+# PINECONE_ENV=...
+# PINECONE_INDEX=...
+# COHERE_API_KEY=...
+# DATABASE_URL=postgresql://rag_user:rag_password@db:5432/rag_db
+# LOG_LEVEL=INFO
+# ENVIRONMENT=production
+# POSTGRES_USER=rag_user
+# POSTGRES_PASSWORD=your-secure-password
+# POSTGRES_DB=rag_db

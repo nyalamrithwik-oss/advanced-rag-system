@@ -1,0 +1,86 @@
+# 🚀 Quick Reference - Run the App
+
+## TL;DR - 3 Steps to Run
+
+```powershell
+# 1. Go to project directory
+cd C:\Users\nyala\OneDrive\RAG\week3\advanced-rag-system
+
+# 2. Activate environment
+.\.venv\Scripts\Activate.ps1
+
+# 3. Run the app
+streamlit run app_wrapper.py
+```
+
+✅ Done! App opens at `http://localhost:8501`
+
+---
+
+## What Was Fixed? 
+
+| Before ❌ | After ✅ |
+|-----------|----------|
+| `from src.rag_pipeline import ...` | `from .rag_pipeline import ...` |
+| `streamlit run src/app.py` | `streamlit run app_wrapper.py` |
+| ModuleNotFoundError ❌ | Works perfectly ✅ |
+
+**5 files fixed** | **5 new files created** | **17+ imports updated**
+
+---
+
+## Quick Checklist
+
+- [x] Imports fixed (src/ → relative)
+- [x] Entry point script created
+- [x] Verification tool created
+- [x] Documentation complete
+- [x] Ready to run!
+
+---
+
+## If Something Goes Wrong
+
+### App won't start?
+```powershell
+# 1. Verify imports work
+python verify_imports.py
+
+# 2. Make sure you're in the right directory
+pwd  # Should end with: advanced-rag-system
+
+# 3. Make sure environment is activated
+# Prompt should show: (.venv) PS ...
+```
+
+### Still having issues?
+Read: `RUN_INSTRUCTIONS.md` → Full troubleshooting guide
+
+---
+
+## Files You'll Use
+
+| File | Purpose |
+|------|---------|
+| `app_wrapper.py` | Run this to start the app |
+| `verify_imports.py` | Check if imports work |
+| `RUN_INSTRUCTIONS.md` | Detailed instructions |
+| `IMPORT_FIX_SUMMARY.md` | Technical details |
+
+---
+
+## What to Do Next
+
+1. **Verify:** `python verify_imports.py`
+   - Should see ✅ ALL IMPORTS SUCCESSFUL!
+
+2. **Run:** `streamlit run app_wrapper.py`
+   - Should open app in browser
+
+3. **Use:** Try the Query Playground or Strategy Comparison
+
+---
+
+**Status:** ✅ Ready to Use
+**Documentation:** In RUN_INSTRUCTIONS.md
+**Questions?** Check IMPORT_FIX_SUMMARY.md
